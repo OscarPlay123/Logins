@@ -25,10 +25,41 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
         }
         .welcome {
             font-size: 24px;
             color: #333;
+        }
+        .user-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .user-info p {
+            margin: 10px 0;
+            color: #666;
+            font-size: 16px;
+        }
+        .user-info strong {
+            color: #333;
+            font-size: 18px;
+        }
+        .email-display {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+        }
+        .email-display span {
+            color: #007bff;
+            font-weight: bold;
         }
         .logout-btn {
             background-color: #dc3545;
@@ -37,20 +68,46 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
         }
         .logout-btn:hover {
             background-color: #c82333;
+        }
+        .content-section {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .content-section h3 {
+            color: #333;
+            margin-top: 0;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="welcome">Bienvenido al Dashboard</div>
+            <div class="welcome">Bienvenido a tu Dashboard</div>
             <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
         </div>
-        <div id="content">
-            <p>Has iniciado sesión correctamente.</p>
+
+        <div class="user-info">
+            <div class="email-display">
+                Sesión iniciada como: <span id="user-email"></span>
+            </div>
+            <p><strong>ID de Usuario:</strong> <span id="user-id"></span></p>
+            <p><strong>Último acceso:</strong> <span id="last-sign-in"></span></p>
+        </div>
+
+        <div class="content-section">
+            <h3>Información de la Cuenta</h3>
+            <div id="account-settings">
+                <p>Cargando información...</p>
+            </div>
         </div>
     </div>
 
@@ -59,12 +116,48 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZWd3eWF5Ymd3dXNza2FvbmJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2NjgxMTMsImV4cCI6MjA2NDI0NDExM30.0uhCTZJrJf2t0DIlP3g-o74mngFT8yRPV_MX-zsSprQ';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Verificar si el usuario está autenticado
+        // Verificar si el usuario está autenticado y cargar sus datos
         async function checkAuth() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 window.location.href = 'index.html';
+            } else {
+                // Cargar datos del usuario
+                loadUserData(user);
             }
+        }
+
+        // Cargar datos del usuario
+        async function loadUserData(user) {
+            // Mostrar información básica
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('user-id').textContent = user.id;
+            document.getElementById('last-sign-in').textContent = new Date(user.last_sign_in_at).toLocaleString();
+
+            // Cargar datos adicionales del usuario desde la tabla profiles
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (error) {
+                console.error('Error al cargar el perfil:', error);
+                document.getElementById('account-settings').innerHTML = '<p>Error al cargar la información del perfil.</p>';
+            } else if (profile) {
+                // Actualizar la UI con datos adicionales del perfil
+                updateProfileUI(profile);
+            }
+        }
+
+        // Actualizar la UI con datos del perfil
+        function updateProfileUI(profile) {
+            const accountSettings = document.getElementById('account-settings');
+            accountSettings.innerHTML = `
+                <p><strong>Nombre completo:</strong> ${profile.full_name || 'No especificado'}</p>
+                <p><strong>Fecha de registro:</strong> ${new Date(profile.created_at).toLocaleDateString()}</p>
+                <p><strong>Última actualización:</strong> ${new Date(profile.updated_at).toLocaleDateString()}</p>
+            `;
         }
 
         // Función para cerrar sesión
