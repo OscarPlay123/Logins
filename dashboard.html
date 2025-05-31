@@ -48,7 +48,7 @@
             color: #333;
             font-size: 18px;
         }
-        .email-display {
+        .email-display, .id-display {
             background-color: #e9ecef;
             padding: 15px;
             border-radius: 6px;
@@ -57,9 +57,14 @@
             font-size: 18px;
             color: #333;
         }
-        .email-display span {
+        .id-display {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+        }
+        .email-display span, .id-display span {
             color: #007bff;
             font-weight: bold;
+            word-break: break-all;
         }
         .logout-btn {
             background-color: #dc3545;
@@ -86,6 +91,19 @@
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
         }
+        .copy-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .copy-btn:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
@@ -99,7 +117,10 @@
             <div class="email-display">
                 Sesión iniciada como: <span id="user-email"></span>
             </div>
-            <p><strong>ID de Usuario:</strong> <span id="user-id"></span></p>
+            <div class="id-display">
+                Tu ID de Usuario: <span id="user-id"></span>
+                <button class="copy-btn" onclick="copyUserId()">Copiar ID</button>
+            </div>
             <p><strong>Último acceso:</strong> <span id="last-sign-in"></span></p>
         </div>
 
@@ -115,6 +136,16 @@
         const SUPABASE_URL = 'https://rhegwyaybgwusskaonbi.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZWd3eWF5Ymd3dXNza2FvbmJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2NjgxMTMsImV4cCI6MjA2NDI0NDExM30.0uhCTZJrJf2t0DIlP3g-o74mngFT8yRPV_MX-zsSprQ';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Función para copiar el ID al portapapeles
+        function copyUserId() {
+            const userId = document.getElementById('user-id').textContent;
+            navigator.clipboard.writeText(userId).then(() => {
+                alert('ID copiado al portapapeles');
+            }).catch(err => {
+                console.error('Error al copiar el ID:', err);
+            });
+        }
 
         // Verificar si el usuario está autenticado y cargar sus datos
         async function checkAuth() {
